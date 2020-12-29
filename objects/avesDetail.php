@@ -2,14 +2,14 @@
 /*
  * @Author: chentx
  * @Date: 2020-12-26 14:55:43
- * @LastEditTime: 2020-12-26 14:58:41
+ * @LastEditTime: 2020-12-29 17:22:44
  * @LastEditors: chentx
  * @Description: 
  */
 class AvesDetail {
+    public $taxonID;
     public $scientificName;
-    public $offset;
-    public $condition;
+    public $chineseName;
 
     public function __construct($locality = null, $month = null, $order = null, $offset = 0) {
         $this->queryParams = array();

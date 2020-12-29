@@ -2,7 +2,7 @@
 /*
  * @Author: chentx
  * @Date: 2020-10-22 17:06:57
- * @LastEditTime: 2020-12-29 14:39:09
+ * @LastEditTime: 2020-12-29 17:08:50
  * @LastEditors: chentx
  * @Description: 
  */
@@ -53,7 +53,7 @@ class Database{
             $sql = "SELECT COUNT(1) FROM {$table} {$condition}";
         }
         $result = $this->execute_dml($sql);
-        return $result->fetch_array()[0];
+        return (int)$result->fetch_array()[0];
     }
 
     public function get_rows($sql) {
