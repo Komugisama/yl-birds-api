@@ -2,7 +2,7 @@
 /*
  * @Author: chentx
  * @Date: 2020-10-22 17:06:57
- * @LastEditTime: 2020-12-29 17:08:50
+ * @LastEditTime: 2020-12-30 16:28:22
  * @LastEditors: chentx
  * @Description: 
  */
@@ -65,7 +65,11 @@ class Database{
             while($row = $result->fetch_assoc()) {
                 $rows[] = $row;
             }
-            return $rows;
+            if (empty($rows)) {
+                return false;
+            } else {
+                return $rows;
+            }
         }
     }
 

@@ -2,12 +2,13 @@
 /*
  * @Author: chentx
  * @Date: 2020-10-29 15:17:26
- * @LastEditTime: 2020-12-29 15:32:55
+ * @LastEditTime: 2020-12-30 12:23:31
  * @LastEditors: chentx
  * @Description: 
  */
 class Output {
     public $language;
+    public $status;
     public $code;
     public $message;
 
@@ -67,8 +68,15 @@ class Output {
             $this->message = ['en' => 'unknown error', 'zh-cn' => '未知错误'];
         }
         
-        $output['code'] = $this->code;
-        $output['msg'] = $this->message[$this->language];
+        if ($this->code == 0) {
+            $this->status = true;
+        } else {
+            $this->status = false;
+        }
+        
+        $output['code']   = $this->code;
+        $output['status'] = $this->status;
+        $output['msg']    = $this->message[$this->language];
 
         if ($data) {
             if (! is_array($data)) {
