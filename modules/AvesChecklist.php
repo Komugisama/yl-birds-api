@@ -2,7 +2,7 @@
 /*
  * @Author: chentx
  * @Date: 2020-12-29 12:00:13
- * @LastEditTime: 2020-12-30 09:41:05
+ * @LastEditTime: 2021-02-07 16:26:47
  * @LastEditors: chentx
  * @Description: 
  */
@@ -14,11 +14,12 @@ Flight::route('/aves-checklist/region', function(){
     $locality = Flight::request()->query['locality'];
     $month    = Flight::request()->query['month'];
     $order    = Flight::request()->query['order'];
+    $name     = Flight::request()->query['name'];
     $offset   = Flight::request()->query['offset'];
 
     require_once('objects/avesChecklist.php');
     $checklist = new Checklist();
-    $data = $checklist->get_region_checklist($locality, $month, $order, $offset);
+    $data = $checklist->get_region_checklist($locality, $month, $order, $name, $offset);
     if ($data) {
         $output->output_json(0, $data);
     } else {

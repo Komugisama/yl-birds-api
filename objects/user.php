@@ -2,7 +2,7 @@
 /*
  * @Author: chentx
  * @Date: 2020-10-29 14:23:40
- * @LastEditTime: 2020-12-29 15:34:16
+ * @LastEditTime: 2021-02-07 17:41:41
  * @LastEditors: chentx
  * @Description: 
  */
@@ -24,23 +24,43 @@ class User {
     }
 
     public function set_signup_info($username, $email, $password) {
-        $reg = "/^[\\~!@#$%^&*()-_=+|{}\[\],.?\/:\"\"\d\w]{6,20}$/";
+        $usernameExp = "/^[\d\w]{6,20}$/";
+        $passwordExp = "/^[\\~!@#$%^&*()-_=+|{}\[\],.?\/:\"\"\d\w]{6,20}$/";
 
-        if (! preg_match($reg, $username)) {
+        try {
+            if (! preg_match($usernameExp, $username)) {
+                $this->errCode = 201;
+                return false;
+            }
+        } catch (Exception $e) {
             $this->errCode = 201;
             return false;
-        } else if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        }
+
+        try {
+            if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $this->errCode = 202;
+                return false;
+            }
+        } catch (Exception $e) {
             $this->errCode = 202;
             return false;
-        } else if (! preg_match($reg, $password)) {
+        }
+        
+        try {
+            if (! preg_match($passwordExp, $password)) {
+                $this->errCode = 203;
+                return false;
+            }
+        } catch (Exception $e) {
             $this->errCode = 203;
             return false;
-        } else {
-            $this->username = $this->db->escape_string($username);
-            $this->email    = $this->db->escape_string($email);
-            $this->password = password_hash($password, PASSWORD_DEFAULT);
-            return true;
         }
+        
+        $this->username = $this->db->escape_string($username);
+        $this->email    = $this->db->escape_string($email);
+        $this->password = password_hash($password, PASSWORD_DEFAULT);
+        return true;
     }
 
     public function signup() {
@@ -52,11 +72,21 @@ class User {
             return false;
         } else {
             $sql = "INSERT INTO user(`username`, `email`, `password`) VALUE('{$this->username}', '{$this->email}', '{$this->password}')";
-            $result = $this->db->execute_dql($sql);
+            $result = $this->db->execute_dml($sql);
             if ($this->db->conn->affected_rows == 1) {
                 return true;
             } else {
                 $this->errCode = 1;
+                return false;
+            }
+        }
+    }
+
+    public function autoLogin() {
+        if ((@ $_COOKIE['autoLogin'] == true) && isset($_COOKIE['userAccount']) && isset($_COOKIE['userPassword'])) {
+            if($this->login($_COOKIE['userAccount'], $_COOKIE['userPassword'])) {
+                return true;
+            } else {
                 return false;
             }
         }
@@ -67,26 +97,31 @@ class User {
             $this->errCode = 211;
             return false;
         } else {
-            $account = $this->db->escape_string($account);
-            $sql = "SELECT `id`, `username`, `email`, `password`, `created` FROM user WHERE `username` = '{$account}' OR email = '{$account}'";
-            $result = $this->db->execute_dml($sql);
-            if ($result->num_rows != 1) {
-                $this->errCode = 212;
-                return false;
-            } else {
-                $row = $result->fetch_assoc();
-                if(password_verify($password, $row['password'])) {
-                    $this->id       = $row['id'];
-                    $this->username = $row['username'];
-                    $this->email    = $row['email'];
-                    $this->password = $row['password'];
-    
-                    $this->set_session();
-                    return array('token' => $this->token);
-                } else {
+            try {
+                $account = $this->db->escape_string($account);
+                $sql = "SELECT `id`, `username`, `email`, `password`, `created` FROM user WHERE `username` = '{$account}' OR email = '{$account}'";
+                $result = $this->db->execute_dql($sql);
+                if ($result->num_rows != 1) {
                     $this->errCode = 212;
                     return false;
+                } else {
+                    $row = $result->fetch_assoc();
+                    if(password_verify($password, $row['password'])) {
+                        $this->id       = $row['id'];
+                        $this->username = $row['username'];
+                        $this->email    = $row['email'];
+                        $this->password = $row['password'];
+        
+                        $this->set_session();
+                        return array('token' => $this->token);
+                    } else {
+                        $this->errCode = 212;
+                        return false;
+                    }
                 }
+            } catch (Exception $e) {
+                $this->errCode = 212;
+                return false;
             }
         }
     }
@@ -112,7 +147,7 @@ class User {
                 $sql = "SELECT 1 FROM user WHERE `username` = '{$this->username}'";
         }
         
-        $result = $this->db->execute_dml($sql);
+        $result = $this->db->execute_dql($sql);
         if ($result->num_rows > 0) {
             return true;
         } else {
@@ -122,6 +157,12 @@ class User {
 
     public function is_already_login() {
         if (isset($_SESSION['user'])) {
+            $this->id       = $_SESSION['user']['id'];
+            $this->username = $_SESSION['user']['username'];
+            $this->email    = $_SESSION['user']['email'];
+            $this->logined  = $_SESSION['user']['logined'];
+            $this->token    = $_SESSION['user']['token'];
+
             return true;
         } else {
             return false;
@@ -138,6 +179,26 @@ class User {
             'logined'  => $this->logined,
             'token'    => $this->token
         );
+    }
+
+    public function get_profile() {
+        if ($this->is_already_login()) {   
+            try {
+                $profile = array(
+                    'id'       => $this->id,
+                    'username' => $this->username,
+                    'email'    => $this->email,
+                    'token'    => $this->token
+                );
+                return $profile;
+            } catch (Exception $e) {
+                $this->errCode = 1;
+                return false;
+            }
+        } else {
+            $this->errCode = 221;
+            return false;
+        }
     }
 
 }

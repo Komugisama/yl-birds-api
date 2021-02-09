@@ -2,7 +2,7 @@
 /*
  * @Author: chentx
  * @Date: 2020-10-29 14:52:52
- * @LastEditTime: 2020-12-29 19:37:42
+ * @LastEditTime: 2021-02-07 17:07:20
  * @LastEditors: chentx
  * @Description: 
  */
@@ -12,6 +12,7 @@ class Checklist {
     public $locality;
     public $month;
     public $order;
+    public $name;
     public $offset;
 
     public $queryParams = array();
@@ -23,21 +24,22 @@ class Checklist {
     }
 
     //获取区域鸟类名录
-    public function get_region_checklist($locality = null, $month = null, $order = null, $offset = 0) {
+    public function get_region_checklist($locality = null, $month = null, $order = null, $name = null, $offset = 0) {
         $this->locality = $locality;
-        $this->month = $month;
-        $this->order = $order;
-        $this->offset = (int)$offset;
+        $this->month    = $month;
+        $this->order    = $order;
+        $this->name     = $name;
+        $this->offset   = (int)$offset;
 
         $this->set_region_clause();
         $this->set_taxon_clause();
 
-        return $this->get_checklist('aves_record');
+        return $this->get_checklist('aves_regional_checklist');
     }
 
     //获取全部鸟类名录
     public function get_all_checklist($order = null, $offset = 0) {
-        $this->order = $order;
+        $this->order  = $order;
         $this->offset = (int)$offset;
 
         $this->set_taxon_clause();
@@ -54,33 +56,32 @@ class Checklist {
     }
 
     public function set_region_clause() {
+        $validator = new Validator();
         if ($this->locality) {
-            $localityArray = ['北校区', '南校区及博览园', '渭河杨凌段', '湋水流域'];
             if (! is_array($this->locality)) {
-                $this->locality = array($this->locality);
+                $this->locality = explode(',', $this->locality);
             }
             foreach ($this->locality as $key=>$value) {
-                if (! in_array($value, $localityArray)) {
+                if (! $validator->locality($value)) {
                     unset($this->locality[$key]);
                 }
             }
-            if ($localityclause = $this->explode_multi_clause('locality', $this->locality)) {
-                array_push($this->queryParams, $localityclause);
+            if ($localityClause = $this->explode_multi_clause('locality', $this->locality)) {
+                array_push($this->queryParams, $localityClause);
             }
         }
 
         if ($this->month) {
-            $monthArray = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
             if (! is_array($this->month)) {
-                $this->month = array($this->month);
+                $this->month = explode(',', $this->month);
             }
             foreach ($this->month as $key=>$value) {
-                if (! in_array($value, $monthArray)) {
+                if (! $validator->month(strtolower($value))) {
                     unset($this->month[$key]);
                 }
             }
-            if ($monthclause = $this->explode_multi_clause('recordMonth', $this->month)) {
-                array_push($this->queryParams, $monthclause);
+            if ($monthClause = $this->explode_multi_clause('recordMonth', $this->month)) {
+                array_push($this->queryParams, $monthClause);
             }
         }
     }
@@ -88,14 +89,20 @@ class Checklist {
     public function set_taxon_clause() {
         if ($this->order) {
             if (! is_array($this->order)) {
-                $this->order = array($this->order);
+                $this->order = explode(',', $this->order);
             }
             foreach ($this->order as $key=>$value) {
                 $this->order[$key] = $this->db->escape_string($value);
             }
-            if ($orderclause = $this->explode_multi_clause('chineseOrder', $this->order)) {
-                array_push($this->queryParams, $orderclause);
+            if ($orderClause = $this->explode_multi_clause('chineseOrder', $this->order)) {
+                array_push($this->queryParams, $orderClause);
             }
+        }
+
+        if ($this->name) {
+            $nameClause = "(chineseName LIKE '{$this->name}%' OR scientificName LIKE '{$this->name}%' OR englishName LIKE '{$this->name}%')";
+
+            array_push($this->queryParams, $nameClause);
         }
     }
 
@@ -116,12 +123,10 @@ class Checklist {
 
         $total = $this->db->get_rows_count(false, $table, $this->clause);
         $data = $this->db->get_rows($sql);
-
         if ($total && $data) {
             return array('total'=>$total, 'offset'=>$this->offset , 'data'=>$data);
         } else {
-            $this->errCode = 102;
-            return false;
+            return array('total'=>0, 'offset'=>$this->offset , 'data'=>array());
         }
     }
 }

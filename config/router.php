@@ -2,33 +2,38 @@
 /*
  * @Author: chentx
  * @Date: 2020-10-22 17:06:09
- * @LastEditTime: 2020-12-30 16:33:13
+ * @LastEditTime: 2021-02-07 20:51:28
  * @LastEditors: chentx
  * @Description: 
  */
+
 //root
+// Flight::map('error', function() {
+//     $output = new Output();
+//     $output->output_json(1);
+// });
+
+Flight::map('notFound', function(){
+    $output = new Output();
+    $output->output_json(100);
+});
+
 Flight::route('/', function(){
     $output = new Output();
     $output->output_json(0);
 });
 
-//user
+//User
 require_once('modules/User.php');
 
-//checklist
+//AvesChecklist
 require_once('modules/AvesChecklist.php');
 
-Flight::route('/aves-detail/@identifier', function($identifier) {
-    $output = new Output();
+//Detail
+require_once('modules/AvesDetail.php');
 
-    require_once('objects/avesDetail.php');
-    $aves = new Aves();
-    if ($data = $aves->check_aves_name($identifier)) {
-        $output->output_json(0, $aves->basicInfo);
-    } else {
-        $output->output_json($aves->errorCode);
-    }
-});
+//Report
+require_once('modules/Report.php');
 
 //启动路由
 Flight::start();
