@@ -2,7 +2,7 @@
 /*
  * @Author: chentx
  * @Date: 2020-10-22 17:06:09
- * @LastEditTime: 2021-02-07 20:51:28
+ * @LastEditTime: 2021-02-10 17:23:28
  * @LastEditors: chentx
  * @Description: 
  */
@@ -28,6 +28,7 @@ require_once('modules/User.php');
 
 //AvesChecklist
 require_once('modules/AvesChecklist.php');
+require_once('modules/AvesAutocomplete.php');
 
 //Detail
 require_once('modules/AvesDetail.php');

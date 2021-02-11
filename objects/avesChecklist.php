@@ -2,7 +2,7 @@
 /*
  * @Author: chentx
  * @Date: 2020-10-29 14:52:52
- * @LastEditTime: 2021-02-07 17:07:20
+ * @LastEditTime: 2021-02-11 17:10:02
  * @LastEditors: chentx
  * @Description: 
  */
@@ -127,6 +127,54 @@ class Checklist {
             return array('total'=>$total, 'offset'=>$this->offset , 'data'=>$data);
         } else {
             return array('total'=>0, 'offset'=>$this->offset , 'data'=>array());
+        }
+    }
+}
+
+class Autocomplete {
+    private $db;
+
+    public $table = "aves_regional_checklist";
+    public $input;
+
+    public function __construct($input = "", $mode) {
+        $this->db = new Database();
+        $this->input = $this->db->escape_string($input);
+
+        if ($mode == "all") {
+            $this->table = "aves_checklist";
+        }
+    }
+
+    public function search() {
+        $sql = "SELECT `chineseName`, `scientificName`, `englishName`, `chineseOrder`, `order`, `chineseFamily`, `family`, `abbreviation` FROM `{$this->table}` WHERE `chineseName` LIKE '{$this->input}%' OR `scientificName` LIKE '{$this->input}%' OR `englishName` LIKE '{$this->input}%' OR `abbreviation` LIKE '{$this->input}%'";
+        if($result = $this->db->get_rows($sql)) {
+            return $result;
+        } else {
+            return array();
+        }
+    }
+}
+
+class Taxon {
+    private $db;
+
+    public $table = "aves_regional_checklist";
+
+    public function __construct($mode) {
+        $this->db = new Database();
+
+        if ($mode == "all") {
+            $this->table = "aves_checklist";
+        }
+    }
+
+    public function search() {
+        $sql = "SELECT DISTINCT `chineseOrder`, `order` FROM `{$this->table}`";
+        if($result = $this->db->get_rows($sql)) {
+            return $result;
+        } else {
+            return array();
         }
     }
 }
